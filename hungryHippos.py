@@ -24,17 +24,17 @@ class Hippo(Sprite):
 
 	def loadImage(self):
 		if(self.player == 1):
-			self.imageBwd = pygame.image.load('Hippo1.png')
-			self.imageFwd = pygame.image.load('Hippo1Fwd.png')
+			self.imageBwd = pygame.image.load('Images/Hippo1.png')
+			self.imageFwd = pygame.image.load('Images/Hippo1Fwd.png')
 		elif(self.player == 2):
-			self.imageBwd = pygame.image.load('Hippo2.png')
-			self.imageFwd = pygame.image.load('Hippo2Fwd.png')
+			self.imageBwd = pygame.image.load('Images/Hippo2.png')
+			self.imageFwd = pygame.image.load('Images/Hippo2Fwd.png')
 		elif(self.player == 3):
-			self.imageBwd = pygame.image.load('Hippo3.png')
-			self.imageFwd = pygame.image.load('Hippo3Fwd.png')
+			self.imageBwd = pygame.image.load('Images/Hippo3.png')
+			self.imageFwd = pygame.image.load('Images/Hippo3Fwd.png')
 		elif(self.player == 4):
-			self.imageBwd = pygame.image.load('Hippo4.png')
-			self.imageFwd = pygame.image.load('Hippo4Fwd.png')
+			self.imageBwd = pygame.image.load('Images/Hippo4.png')
+			self.imageFwd = pygame.image.load('Images/Hippo4Fwd.png')
 
 	def forward(self):
 		self.image = self.imageFwd
