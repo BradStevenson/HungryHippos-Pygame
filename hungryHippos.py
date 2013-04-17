@@ -157,7 +157,7 @@ def main():
 
 	# SET RESOLUTION
 	screen = pygame.display.set_mode((WIDTH_RES, HEIGHT_RES))
-	background = pygame.image.load('background.png')
+	background = pygame.image.load('Images/background.png')
 	screen.blit(background,(0, 0))
 
 	# INITIALIZE SPRITES
