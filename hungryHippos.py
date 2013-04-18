@@ -10,6 +10,89 @@ pygame.font.init()
 HEIGHT_RES = 768
 WIDTH_RES = 768
 
+class Menu:
+    field_list = []
+    field = []
+    dest_surface = pygame.Surface
+    number_fields = 0
+    background_color = (51,51,51)
+    font_size = 36
+    font_color =  (255, 255, 153)
+    selection_color = (153,102,255)
+    selection_position = 0
+    position_paste = (0,0)
+    menu_width = 0
+    menu_height = 0
+
+    class Field:
+    	text = ''
+    	field = pygame.Surface
+    	field_rect = pygame.Rect
+    	selection_rect = pygame.Rect
+
+    def move_menu(self, top, left):
+    	self.position_paste = (top, left)
+
+    def set_colors(self, text, selection, background):
+    	self.background_color = background
+    	self.color_text = text
+    	self.selection_color = selection
+
+    def get_position(self):
+    	return self.selection_position
+
+    def init(self, item_list, dest_surface):
+    	self.field_list = item_list
+    	self.dest_surface = dest_surface
+    	self.number_fields = len(self.field_list)
+    	self.create_structures()
+
+    def draw(self, move=0):
+        if move:
+            self.selection_position += move 
+            if self.selection_position == -1:
+                self.selection_position = self.number_fields - 1
+            self.selection_position %= self.number_fields
+        menu = pygame.Surface((self.menu_width, self.menu_height))
+        menu.fill(self.background_color)
+        selection_rect = self.field[self.selection_position].selection_rect
+        pygame.draw.rect(menu, self.selection_color, selection_rect)
+
+        for i in xrange(self.number_fields):
+            menu.blit(self.field[i].field, self.field[i].field_rect)
+        self.dest_surface.blit(menu, self.position_paste)
+        return self.selection_position
+
+    def create_structures(self):
+        shift = 0
+        self.menu_height = 0
+        self.font = pygame.font.Font(None, self.font_size)
+        for i in xrange(self.number_fields):
+            self.field.append(self.Field())
+            self.field[i].text = self.field_list[i]
+            self.field[i].field = self.font.render(self.field[i].text, 1, self.font_color)
+
+            self.field[i].field_rect = self.field[i].field.get_rect()
+            shift = int(self.font_size * 0.2)
+
+            height = self.field[i].field_rect.height
+            self.field[i].field_rect.left = shift
+            self.field[i].field_rect.top = shift + (shift * 2 + height) * i
+
+            width = self.field[i].field_rect.width + shift*2
+            height = self.field[i].field_rect.height + shift*2            
+            left = self.field[i].field_rect.left - shift
+            top = self.field[i].field_rect.top - shift
+
+            self.field[i].selection_rect = (left,top ,width, height)
+            if width > self.menu_width:
+                    self.menu_width = width
+            self.menu_height += height
+        x = self.dest_surface.get_rect().centerx - self.menu_width / 2
+        y = self.dest_surface.get_rect().centery - self.menu_height / 2
+        mx, my = self.position_paste
+        self.position_paste = (x + mx, y + my) 
+
 class Hippo(Sprite):
 	""" HANDLES HIPPO BEHAVIOURS """
 	def __init__(self, position, player):
@@ -155,33 +238,91 @@ def main():
 	def nop():
 		pass
 
+	def createBall(players):
+		if players == 2:
+			return Ball("white", [score1, score2], [player1, player2])
+		elif players == 3:
+			return Ball("white", [score1, score2, score3], [player1, player2, player3])
+		elif players == 4:
+			return Ball("white", [score1, score2, score3, score4], [player1, player2, player3, player4])
+
+	# SET RESOLUTION
+	screen = pygame.display.set_mode((WIDTH_RES, HEIGHT_RES))
+	background = pygame.image.load('Images/background.png')
+	screen.blit(background,(0, 0))
+	menu_state = True
+	players = 0
+	menu = Menu()
+	menu.init(['2 player', '3 player', ' 4 player'], screen)
+	menu.draw()
+	clock = pygame.time.Clock()
+	running = True
+
+	while menu_state:
+		clock.tick(60)
+		pygame.display.flip()
+
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				running = False
+				menu_state = False
+			elif event.type == pygame.KEYDOWN:
+			   	if event.key == pygame.K_UP:
+			   		menu.draw(-1)
+			  	elif event.key == pygame.K_DOWN:
+				   		menu.draw(1)
+			  	elif event.key == pygame.K_RETURN:
+				   	if menu.get_position() == 0:
+				   		players = 2
+				   	elif menu.get_position() == 1:
+				   		players = 3
+				   	elif menu.get_position() == 2:
+				   		players = 4
+				   	menu_state = False
+
 	# SET RESOLUTION
 	screen = pygame.display.set_mode((WIDTH_RES, HEIGHT_RES))
 	background = pygame.image.load('Images/background.png')
 	screen.blit(background,(0, 0))
 
-	# INITIALIZE SPRITES
-	score1 = Score("white", (20, (HEIGHT_RES/2)-270), 1)
-	score2 = Score("white", ((WIDTH_RES-40, (HEIGHT_RES/2)+70)), 2)
-	score3 = Score("white", ((WIDTH_RES/2)+70, 20), 3)
-	score4 = Score("white", ((WIDTH_RES/2)-270, HEIGHT_RES-40), 4)
-	player1 = Hippo((0, (HEIGHT_RES/2)-50), 1)
-	player2 = Hippo((WIDTH_RES-100, (HEIGHT_RES/2)-50), 2)
-	player3 = Hippo(((WIDTH_RES/2)-50, 0), 3)
-	player4 = Hippo(((WIDTH_RES/2)-50, HEIGHT_RES-100), 4)
-	ball1 = Ball("white", [score1, score2, score3, score4], [player1, player2, player3, player4])
+	# INITIALIZE SPRITES BASED ON PLAYERS
+	if players >= 2:
+		score1 = Score("white", (20, (HEIGHT_RES/2)-270), 1)
+		score2 = Score("white", ((WIDTH_RES-40, (HEIGHT_RES/2)+70)), 2)
+		player1 = Hippo((0, (HEIGHT_RES/2)-50), 1)
+		player2 = Hippo((WIDTH_RES-100, (HEIGHT_RES/2)-50), 2)
+		sprites = pygame.sprite.RenderClear([score1, score2, player1, player2])
+		# KEYMAP
+		key_map = {
+			pygame.K_q: [player1.forward, player1.back],
+			pygame.K_p: [player2.forward, player2.back]
+		}
+	if players >= 3:
+		score3 = Score("white", ((WIDTH_RES/2)+70, 20), 3)
+		player3 = Hippo(((WIDTH_RES/2)-50, 0), 3)
+		sprites = pygame.sprite.RenderClear([score1, score2, score3, player1, player2, player3])
+		# KEYMAP
+		key_map = {
+			pygame.K_q: [player1.forward, player1.back],
+			pygame.K_p: [player2.forward, player2.back],
+			pygame.K_m: [player3.forward, player3.back]
+		}
+	elif players == 4:
+		score4 = Score("white", ((WIDTH_RES/2)-270, HEIGHT_RES-40), 4)
+		player4 = Hippo(((WIDTH_RES/2)-50, HEIGHT_RES-100), 4)
+		sprites = pygame.sprite.RenderClear([score1, score2, score3, score4, player1, player2, player3, player4])
+		# KEYMAP
+		key_map = {
+			pygame.K_q: [player1.forward, player1.back],
+			pygame.K_p: [player2.forward, player2.back],
+			pygame.K_m: [player3.forward, player3.back],
+			pygame.K_z: [player4.forward, player4.back]
+		}
 
-	sprites = pygame.sprite.RenderClear([score1, score2, score3, score4, player1, player2, player3, player4])
+	ball1 = createBall(players)
+
 	ballList = [ball1]
 	ballSprite = pygame.sprite.RenderClear(ballList)
-
-	# KEYMAP
-	key_map = {
-		pygame.K_q: [player1.forward, player1.back],
-		pygame.K_p: [player2.forward, player2.back],
-		pygame.K_m: [player3.forward, player3.back],
-		pygame.K_z: [player4.forward, player4.back]
-	}
 
 	counter = 0
 	clock = pygame.time.Clock()
@@ -193,7 +334,7 @@ def main():
 		sprites.update()
 		ballSprite.update()
 		if (counter%180 == 0 and len(ballList) < 28):
-			ballList.append(Ball("white", [score1, score2], [player1, player2, player3, player4]))
+			ballList.append(createBall(players))
 			ballSprite = pygame.sprite.RenderClear(ballList)
 		sprites.draw(screen)
 		ballSprite.draw(screen)
