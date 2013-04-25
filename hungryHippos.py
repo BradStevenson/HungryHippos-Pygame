@@ -9,18 +9,19 @@ pygame.display.init()
 pygame.font.init()
 HEIGHT_RES = 768
 WIDTH_RES = 768
+totalScore = 0
 
 class Menu:
     field_list = []
     field = []
     dest_surface = pygame.Surface
     number_fields = 0
-    background_color = (51,51,51)
+    background_color = (52, 73, 94)
     font_size = 36
-    font_color =  (255, 255, 153)
-    selection_color = (153,102,255)
+    font_color =  (255, 255, 255)
+    selection_color = (26, 188, 156)
     selection_position = 0
-    position_paste = (0,0)
+    position = (0,0)
     menu_width = 0
     menu_height = 0
 
@@ -31,11 +32,11 @@ class Menu:
     	selection_rect = pygame.Rect
 
     def move_menu(self, top, left):
-    	self.position_paste = (top, left)
+    	self.position = (top, left)
 
     def set_colors(self, text, selection, background):
     	self.background_color = background
-    	self.color_text = text
+    	self.font_color = text
     	self.selection_color = selection
 
     def get_position(self):
@@ -60,7 +61,7 @@ class Menu:
 
         for i in xrange(self.number_fields):
             menu.blit(self.field[i].field, self.field[i].field_rect)
-        self.dest_surface.blit(menu, self.position_paste)
+        self.dest_surface.blit(menu, self.position)
         return self.selection_position
 
     def create_structures(self):
@@ -83,15 +84,17 @@ class Menu:
             height = self.field[i].field_rect.height + shift*2            
             left = self.field[i].field_rect.left - shift
             top = self.field[i].field_rect.top - shift
-
-            self.field[i].selection_rect = (left,top ,width, height)
             if width > self.menu_width:
-                    self.menu_width = width
+            	self.menu_width = width
+            else:
+            	width = self.menu_width
+
+            self.field[i].selection_rect = (left, top, width, height)
             self.menu_height += height
         x = self.dest_surface.get_rect().centerx - self.menu_width / 2
         y = self.dest_surface.get_rect().centery - self.menu_height / 2
-        mx, my = self.position_paste
-        self.position_paste = (x + mx, y + my) 
+        mx, my = self.position
+        self.position = (x + mx, y + my) 
 
 class Hippo(Sprite):
 	""" HANDLES HIPPO BEHAVIOURS """
@@ -166,10 +169,10 @@ class Ball(Sprite):
 						if score.player == hippo.player:
 							self.score[score.player-1].increase()
 					self.rect.center = self.start
-					angle = random.uniform(0, math.pi/2)
-					angle *= random.choice([-1,1])
-					side = random.choice([-1,1])
-					self.velocity = [side * 15 * math.cos(angle), 15 * math.sin(angle)]
+					self.velocity = [0, 0]
+					self.image.set_alpha(0)
+					global totalScore
+					totalScore += 1
 					return True
 				else:
 					self.velocity[0] *= -1
@@ -199,16 +202,15 @@ class Score(Sprite):
 
 		self.color = pygame.Color(color)
 		if(player <= 2):
-			self.size = (20,210)
+			self.size = (20,300)
 		else:
-			self.size = (210, 20)
+			self.size = (300, 20)
 
 		self.image = pygame.Surface(self.size)
 		self.image.set_colorkey(pygame.Color("black"))
 		self.player = player
 		self.score = 0
 		self.rect = pygame.Rect(position, self.size)
-		# self.rect.center = position
 		self.render_balls()
 
 	def render_balls(self):
@@ -232,8 +234,7 @@ class ScoreBalls(Sprite):
 		for i in range (0, self.score):
 			pygame.draw.circle(self.image, pygame.Color(color), (i*10, 10), 10)
 
-			
-
+		
 def main():
 	def nop():
 		pass
@@ -258,6 +259,7 @@ def main():
 	clock = pygame.time.Clock()
 	running = True
 
+	# INITAL GAME LOOP PRESENTING MENU
 	while menu_state:
 		clock.tick(60)
 		pygame.display.flip()
@@ -270,7 +272,7 @@ def main():
 			   	if event.key == pygame.K_UP:
 			   		menu.draw(-1)
 			  	elif event.key == pygame.K_DOWN:
-				   		menu.draw(1)
+				   	menu.draw(1)
 			  	elif event.key == pygame.K_RETURN:
 				   	if menu.get_position() == 0:
 				   		players = 2
@@ -280,14 +282,15 @@ def main():
 				   		players = 4
 				   	menu_state = False
 
-	# SET RESOLUTION
+	# THIS RUNS WHEN NUMBER OF PLAYERS HAS BEEN CHOSEN
+	# RESET SCREEN
 	screen = pygame.display.set_mode((WIDTH_RES, HEIGHT_RES))
 	background = pygame.image.load('Images/background.png')
 	screen.blit(background,(0, 0))
 
 	# INITIALIZE SPRITES BASED ON PLAYERS
 	if players >= 2:
-		score1 = Score("white", (20, (HEIGHT_RES/2)-270), 1)
+		score1 = Score("white", (20, 10), 1)
 		score2 = Score("white", ((WIDTH_RES-40, (HEIGHT_RES/2)+70)), 2)
 		player1 = Hippo((0, (HEIGHT_RES/2)-50), 1)
 		player2 = Hippo((WIDTH_RES-100, (HEIGHT_RES/2)-50), 2)
@@ -307,8 +310,8 @@ def main():
 			pygame.K_p: [player2.forward, player2.back],
 			pygame.K_m: [player3.forward, player3.back]
 		}
-	elif players == 4:
-		score4 = Score("white", ((WIDTH_RES/2)-270, HEIGHT_RES-40), 4)
+	if players == 4:
+		score4 = Score("white", (10, HEIGHT_RES-40), 4)
 		player4 = Hippo(((WIDTH_RES/2)-50, HEIGHT_RES-100), 4)
 		sprites = pygame.sprite.RenderClear([score1, score2, score3, score4, player1, player2, player3, player4])
 		# KEYMAP
@@ -321,8 +324,10 @@ def main():
 
 	ball1 = createBall(players)
 
+	# INITIALISE LIST OF BALLS
 	ballList = [ball1]
 	ballSprite = pygame.sprite.RenderClear(ballList)
+	global totalScore
 
 	counter = 0
 	clock = pygame.time.Clock()
@@ -333,7 +338,8 @@ def main():
 		counter += 1
 		sprites.update()
 		ballSprite.update()
-		if (counter%180 == 0 and len(ballList) < 28):
+		# EVERY 3 SECONDS ADD A NEW BALL TO BALL LIST
+		if (counter%180 == 0 and len(ballList) < players*10):
 			ballList.append(createBall(players))
 			ballSprite = pygame.sprite.RenderClear(ballList)
 		sprites.draw(screen)
@@ -349,6 +355,10 @@ def main():
 				key_map[event.key][0]()
 			elif event.type == pygame.KEYUP and event.key in key_map:
 				key_map[event.key][1]()
+
+		if totalScore == players*10:
+			running = False
+			# Show winner menu
 
 if __name__ == "__main__":
 	main()
