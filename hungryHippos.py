@@ -17,7 +17,10 @@ class Menu:
     dest_surface = pygame.Surface
     number_fields = 0
     background_color = (52, 73, 94)
-    font_size = 36
+    title_font = "pixelated_bold.ttf"
+    title_size = 36
+    font = "pixelated_font.ttf"
+    font_size = 20
     font_color =  (255, 255, 255)
     selection_color = (26, 188, 156)
     selection_position = 0
@@ -39,13 +42,18 @@ class Menu:
     	self.font_color = text
     	self.selection_color = selection
 
+    def set_font(self, title, menu):
+    	self.title_font = title
+    	self.font = menu
+
     def get_position(self):
     	return self.selection_position
 
-    def init(self, item_list, dest_surface):
+    def init(self, item_list, dest_surface, title):
     	self.field_list = item_list
     	self.dest_surface = dest_surface
     	self.number_fields = len(self.field_list)
+    	self.title = title
     	self.create_structures()
 
     def draw(self, move=0):
@@ -67,14 +75,21 @@ class Menu:
     def create_structures(self):
         shift = 0
         self.menu_height = 0
-        self.font = pygame.font.Font(None, self.font_size)
+        self.font = pygame.font.Font(self.font, self.font_size)
         for i in xrange(self.number_fields):
             self.field.append(self.Field())
             self.field[i].text = self.field_list[i]
-            self.field[i].field = self.font.render(self.field[i].text, 1, self.font_color)
+            if i == 0:
+           		if self.title:
+           			self.title_font = pygame.font.Font(self.title_font, self.title_size)
+           			self.field[i].field = self.title_font.render(self.field[i].text, 1, self.font_color)
+           		else:
+           			self.field[i].field = self.font.render(self.field[i].text, 1, self.font_color)
+            else:
+            	self.field[i].field = self.font.render(self.field[i].text, 1, self.font_color)
 
             self.field[i].field_rect = self.field[i].field.get_rect()
-            shift = int(self.font_size * 0.2)
+            shift = int(self.title_size * 0.2)
 
             height = self.field[i].field_rect.height
             self.field[i].field_rect.left = shift
@@ -124,10 +139,11 @@ class Hippo(Sprite):
 
 	def forward(self):
 		self.image = self.imageFwd
-		if (self.player == 2):
+		if self.player == 2:
 			self.rect = pygame.Rect((self.position[0]-100, self.position[1]), (200, 100))
-			pass
-		elif (self.player == 4):
+		elif self.player == 3:
+			self.rect = pygame.Rect(self.position, (100, 200))
+		elif self.player == 4:
 			self.rect = pygame.Rect((self.position[0], self.position[1]-100), (200, 100))
 		else:
 			self.rect = pygame.Rect(self.position, (200, 100))
@@ -223,17 +239,6 @@ class Score(Sprite):
 	def increase(self):
 		self.score += 1
 		self.render_balls()
-
-class ScoreBalls(Sprite):
-	"""docstring for ScoreBalls"""
-	def __init__(self, Score):
-		pygame.sprite.Sprite.__init__(self)
-		self.score = Score
-
-	def render_balls(self):
-		for i in range (0, self.score):
-			pygame.draw.circle(self.image, pygame.Color(color), (i*10, 10), 10)
-
 		
 def main():
 	def nop():
@@ -261,7 +266,7 @@ def main():
 	screen.blit(background,(0, 0))
 	players = 0
 	menu = Menu()
-	menu.init([' 2 player ', ' 3 player ', ' 4 player '], screen)
+	menu.init([' HUNGRY HIPPOS ', '  2 player ', '  3 player ', '  4 player '], screen, True)
 	menu.draw()
 	clock = pygame.time.Clock()
 	start_menu = True
@@ -284,11 +289,11 @@ def main():
 			  	elif event.key == pygame.K_DOWN:
 				   	menu.draw(1)
 			  	elif event.key == pygame.K_RETURN:
-				   	if menu.get_position() == 0:
+				   	if menu.get_position() == 1:
 				   		players = 2
-				   	elif menu.get_position() == 1:
-				   		players = 3
 				   	elif menu.get_position() == 2:
+				   		players = 3
+				   	elif menu.get_position() == 3:
 				   		players = 4
 				   	start_menu = False
 
@@ -375,7 +380,7 @@ def main():
 
 	menu = Menu()
 	winner = getWinner(scoreList)
-	menu.init(['Player '+str(winner)+' Wins!', '  Play again  ', '     Quit     '], screen)
+	menu.init(['Player '+str(winner)+' Wins!', '  Play again  ', '     Quit     '], screen, True)
 	menu.draw()
 
 	while win_menu:
@@ -393,6 +398,7 @@ def main():
 			  	elif event.key == pygame.K_RETURN:
 				   	if menu.get_position() == 1:
 				  		main()
+				  		win_menu = False
 				   	elif menu.get_position() == 2:
 				   		win_menu = False
 
