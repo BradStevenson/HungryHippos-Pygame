@@ -156,7 +156,7 @@ class Ball(Sprite):
 		angle = random.uniform(0, (math.pi/2)-0.18) # 0.18 ~= 10 degress
 		angle *= random.choice([-1,1])
 		side = random.choice([-1,1])
-		self.velocity = [side * 10 * math.cos(angle), 10 * math.sin(angle)]
+		self.velocity = [side * 15 * math.cos(angle), 15 * math.sin(angle)]
 		self.start = (WIDTH_RES/2, HEIGHT_RES/2)
 
 	def update(self):
@@ -247,27 +247,37 @@ def main():
 		elif players == 4:
 			return Ball("white", [score1, score2, score3, score4], [player1, player2, player3, player4])
 
+	def getWinner(scores):
+		highScore = 0
+		for score in scores:
+			if score.score > highScore:
+				highScore = score.score
+				winner = score.player
+		return winner
+
 	# SET RESOLUTION
 	screen = pygame.display.set_mode((WIDTH_RES, HEIGHT_RES))
 	background = pygame.image.load('Images/background.png')
 	screen.blit(background,(0, 0))
-	menu_state = True
 	players = 0
 	menu = Menu()
-	menu.init(['2 player', '3 player', ' 4 player'], screen)
+	menu.init([' 2 player ', ' 3 player ', ' 4 player '], screen)
 	menu.draw()
 	clock = pygame.time.Clock()
-	running = True
+	start_menu = True
+	running_game = True
+	win_menu = True
 
 	# INITAL GAME LOOP PRESENTING MENU
-	while menu_state:
+	while start_menu:
 		clock.tick(60)
 		pygame.display.flip()
 
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
-				running = False
-				menu_state = False
+				running_game = False
+				start_menu = False
+				win_menu = False
 			elif event.type == pygame.KEYDOWN:
 			   	if event.key == pygame.K_UP:
 			   		menu.draw(-1)
@@ -280,7 +290,7 @@ def main():
 				   		players = 3
 				   	elif menu.get_position() == 2:
 				   		players = 4
-				   	menu_state = False
+				   	start_menu = False
 
 	# THIS RUNS WHEN NUMBER OF PLAYERS HAS BEEN CHOSEN
 	# RESET SCREEN
@@ -292,6 +302,7 @@ def main():
 	if players >= 2:
 		score1 = Score("white", (20, 10), 1)
 		score2 = Score("white", ((WIDTH_RES-40, (HEIGHT_RES/2)+70)), 2)
+		scoreList = [score1, score2]
 		player1 = Hippo((0, (HEIGHT_RES/2)-50), 1)
 		player2 = Hippo((WIDTH_RES-100, (HEIGHT_RES/2)-50), 2)
 		sprites = pygame.sprite.RenderClear([score1, score2, player1, player2])
@@ -302,6 +313,7 @@ def main():
 		}
 	if players >= 3:
 		score3 = Score("white", ((WIDTH_RES/2)+70, 20), 3)
+		scoreList = [score1, score2, score3]
 		player3 = Hippo(((WIDTH_RES/2)-50, 0), 3)
 		sprites = pygame.sprite.RenderClear([score1, score2, score3, player1, player2, player3])
 		# KEYMAP
@@ -312,6 +324,7 @@ def main():
 		}
 	if players == 4:
 		score4 = Score("white", (10, HEIGHT_RES-40), 4)
+		scoreList = [score1, score2, score3, score4]
 		player4 = Hippo(((WIDTH_RES/2)-50, HEIGHT_RES-100), 4)
 		sprites = pygame.sprite.RenderClear([score1, score2, score3, score4, player1, player2, player3, player4])
 		# KEYMAP
@@ -332,14 +345,14 @@ def main():
 	counter = 0
 	clock = pygame.time.Clock()
 	# GAME LOOP
-	running = True
-	while running:
+	running_game = True
+	while running_game:
 		clock.tick(60)
 		counter += 1
 		sprites.update()
 		ballSprite.update()
 		# EVERY 3 SECONDS ADD A NEW BALL TO BALL LIST
-		if (counter%180 == 0 and len(ballList) < players*10):
+		if (counter%60 == 0 and len(ballList) < players*10):
 			ballList.append(createBall(players))
 			ballSprite = pygame.sprite.RenderClear(ballList)
 		sprites.draw(screen)
@@ -350,15 +363,38 @@ def main():
 
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
-				running = False
+				running_game = False
+				win_menu = False
 			elif event.type == pygame.KEYDOWN and event.key in key_map:
 				key_map[event.key][0]()
 			elif event.type == pygame.KEYUP and event.key in key_map:
 				key_map[event.key][1]()
 
 		if totalScore == players*10:
-			running = False
-			# Show winner menu
+			running_game = False
+
+	menu = Menu()
+	winner = getWinner(scoreList)
+	menu.init(['Player '+str(winner)+' Wins!', '  Play again  ', '     Quit     '], screen)
+	menu.draw()
+
+	while win_menu:
+		clock.tick(60)
+		pygame.display.flip()
+
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				win_menu = False
+			elif event.type == pygame.KEYDOWN:
+			   	if event.key == pygame.K_UP:
+			   		menu.draw(-1)
+			  	elif event.key == pygame.K_DOWN:
+				   	menu.draw(1)
+			  	elif event.key == pygame.K_RETURN:
+				   	if menu.get_position() == 1:
+				  		main()
+				   	elif menu.get_position() == 2:
+				   		win_menu = False
 
 if __name__ == "__main__":
 	main()
