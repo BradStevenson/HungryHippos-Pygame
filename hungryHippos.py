@@ -145,8 +145,6 @@ class Score(Sprite):
 		self.render_balls()
 		
 def main():
-	def nop():
-		pass
 
 	def createBall(players):
 		if players == 2:
@@ -165,20 +163,27 @@ def main():
 				winner = score.player
 		return winner
 
-	# SET RESOLUTION
-	screen = pygame.display.set_mode((WIDTH_RES, HEIGHT_RES))
-	background = pygame.image.load('Images/background.png')
-	screen.blit(background,(0, 0))
+	def setScreen():
+		screen = pygame.display.set_mode((WIDTH_RES, HEIGHT_RES))
+		background = pygame.image.load('Images/background.png')
+		screen.blit(background,(0, 0))
+
+	setScreen()
+
+	global totalScore
 	players = 0
-	menu = Menu()
-	menu.init([' HUNGRY HIPPOS ', '  2 player ', '  3 player ', '  4 player '], screen, True)
-	menu.draw()
+	totalScore = 0
+	counter = 0
 	clock = pygame.time.Clock()
 	start_menu = True
 	running_game = True
 	win_menu = True
 
-	# INITAL GAME LOOP PRESENTING MENU
+	menu = Menu()
+	menu.init([' HUNGRY HIPPOS ', '  2 player ', '  3 player ', '  4 player '], screen, True)
+	menu.draw()
+
+	# Player choice menu
 	while start_menu:
 		clock.tick(60)
 		pygame.display.flip()
@@ -202,13 +207,10 @@ def main():
 				   		players = 4
 				   	start_menu = False
 
-	# THIS RUNS WHEN NUMBER OF PLAYERS HAS BEEN CHOSEN
-	# RESET SCREEN
-	screen = pygame.display.set_mode((WIDTH_RES, HEIGHT_RES))
-	background = pygame.image.load('Images/background.png')
-	screen.blit(background,(0, 0))
+	# Reset Screen to start game
+	setScreen()
 
-	# INITIALIZE SPRITES BASED ON PLAYERS
+	# Initialize Sprites based on user chosen players.
 	if players >= 2:
 		score1 = Score("white", (20, 10), 1)
 		score2 = Score("white", ((WIDTH_RES-40, (HEIGHT_RES/2)+70)), 2)
@@ -247,24 +249,22 @@ def main():
 
 	ball1 = createBall(players)
 
-	# INITIALISE LIST OF BALLS
+	# Set balls into a list so more can be dynamically added
 	ballList = [ball1]
 	ballSprite = pygame.sprite.RenderClear(ballList)
-	global totalScore
-	totalScore = 0
-	counter = 0
-	clock = pygame.time.Clock()
-	# GAME LOOP
-	running_game = True
+
+	# Run Game
 	while running_game:
 		clock.tick(60)
 		counter += 1
 		sprites.update()
 		ballSprite.update()
-		# EVERY 3 SECONDS ADD A NEW BALL TO BALL LIST
+
+		# Every 60 seconds add a ball whilst there are less balls than 10*players
 		if (counter%60 == 0 and len(ballList) < players*10):
 			ballList.append(createBall(players))
 			ballSprite = pygame.sprite.RenderClear(ballList)
+
 		sprites.draw(screen)
 		ballSprite.draw(screen)
 		pygame.display.flip()
@@ -280,9 +280,11 @@ def main():
 			elif event.type == pygame.KEYUP and event.key in key_map:
 				key_map[event.key][1]()
 
+		# When all balls have been used end game loop.
 		if totalScore == players*10:
 			running_game = False
 
+	
 	menu = Menu()
 	winner = getWinner(scoreList)
 	menu.init(['Player '+str(winner)+' Wins!', '  Play again  ', '     Quit     '], screen, True)
