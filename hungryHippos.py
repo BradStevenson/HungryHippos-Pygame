@@ -274,12 +274,15 @@ def main():
 			  	elif event.key == pygame.K_RETURN:
 				   	if menu.get_position() == 1:
 				   		apocalypse = True
+				   		print "Infinite"
 				   	elif menu.get_position() == 2:
 				   		multiplayer = True
+				   		print "Multiplayer"
 				   	elif menu.get_position() == 3:
 				   		singleplayer = True
 				   		player_menu = False
 				   		players = 4
+				   		print "Singleplayer"
 				   	if menu.get_position() != 0:
  				   		game_menu = False
 
@@ -315,6 +318,7 @@ def main():
 				   	elif menu.get_position() == 3:
 				   		main()
 				   	player_menu = False
+	print str(players) + " Players"
 
 	# Reset Screen to start game
 	setScreen(screen, background)
@@ -389,7 +393,6 @@ def main():
 		if apocalypse:
 			if  stage > 1 and counter%90 == 0:
 				stage -= 1
-				print stage
 			if counter%stage == 0:
 				ballList.append(createBall(scoreList, playerList))
 				ballSprite = pygame.sprite.RenderClear(ballList)
