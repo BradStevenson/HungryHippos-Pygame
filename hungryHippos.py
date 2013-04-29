@@ -61,17 +61,19 @@ class autoHippo(Hippo):
 	def setAutoHippo(self, ballList):
 		self.balls = ballList
 		if self.player < 3:
-			size = (200, 100)
+			self.catchRect = pygame.Rect((self.position[0], self.position[1]-50), (200, 200))
 		else:
-			size = (100, 200)
-		self.catchRect = pygame.Rect(self.position, size)
+			self.catchRect = pygame.Rect((self.position[0]-50, self.position[1]), (200, 200))
 
 	def update(self):
+		goForward = False
 		for ball in self.balls:
-			if self.catchRect.colliderect(ball.rect):
-				self.forward()
-			else:
-				self.back()
+			if self.catchRect.colliderect(ball.rect) and ball.__class__.__name__ != 'damageBall':
+				goForward = True	
+		if goForward:
+			self.forward()
+		else:
+			self.back()
 
 class Ball(Sprite):
 	""" HANDLES BALL BEHAVIOURS """
