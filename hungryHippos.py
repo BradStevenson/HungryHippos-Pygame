@@ -45,7 +45,7 @@ class Hippo(Sprite):
 		elif self.player == 3:
 			self.rect = pygame.Rect(self.position, (100, 200))
 		elif self.player == 4:
-			self.rect = pygame.Rect((self.position[0], self.position[1]-100), (200, 100))
+			self.rect = pygame.Rect((self.position[0], self.position[1]-100), (100, 200))
 		else:
 			self.rect = pygame.Rect(self.position, (200, 100))
 		pygame.draw.rect(self.image, pygame.Color("black"), self.rect)
@@ -56,7 +56,23 @@ class Hippo(Sprite):
 		self.rect = pygame.Rect(self.position, (100, 100))
 		pygame.draw.rect(self.image, pygame.Color("black"), self.rect)
 		self.state = False
-		
+
+class autoHippo(Hippo):
+	def setAutoHippo(self, ballList):
+		self.balls = ballList
+		if self.player < 3:
+			size = (200, 100)
+		else:
+			size = (100, 200)
+		self.catchRect = pygame.Rect(self.position, size)
+
+	def update(self):
+		for ball in self.balls:
+			if self.catchRect.colliderect(ball.rect):
+				self.forward()
+			else:
+				self.back()
+
 class Ball(Sprite):
 	""" HANDLES BALL BEHAVIOURS """
 	def __init__(self, score, hippos):
@@ -262,6 +278,8 @@ def main():
 				   		multiplayer = True
 				   	elif menu.get_position() == 3:
 				   		singleplayer = True
+				   		player_menu = False
+				   		players = 4
 				   	if menu.get_position() != 0:
  				   		game_menu = False
 
@@ -302,31 +320,48 @@ def main():
 	setScreen(screen, background)
 
 	# Initialize Sprites based on user chosen players.
-	if players >= 2:
+	if singleplayer:
 		score1 = createScore((20, 24), 1, apocalypse)
 		score2 = createScore(((WIDTH_RES-40, (HEIGHT_RES/2)+60)), 2, apocalypse)
-		scoreList = [score1, score2]
-		player1 = Hippo((0, (HEIGHT_RES/2)-50), 1)
-		player2 = Hippo((WIDTH_RES-100, (HEIGHT_RES/2)-50), 2)
-		playerList = [player1, player2]
-		key_map = {
-			pygame.K_q: [player1.forward, player1.back],
-			pygame.K_p: [player2.forward, player2.back]
-		}
-
-	if players >= 3:
 		score3 = createScore(((WIDTH_RES/2)+70, 20), 3, apocalypse)
-		scoreList.append(score3)
-		player3 = Hippo(((WIDTH_RES/2)-50, 0), 3)
-		playerList.append(player3)
-		key_map[pygame.K_m] = [player3.forward, player3.back]
-
-	if players == 4:
 		score4 = createScore((10, HEIGHT_RES-40), 4, apocalypse)
-		scoreList.append(score4)
-		player4 = Hippo(((WIDTH_RES/2)-50, HEIGHT_RES-100), 4)
-		playerList.append(player4)
-		key_map[pygame.K_z] = [player4.forward, player4.back]
+		scoreList = [score1, score2, score3, score4]
+
+		player1 = Hippo((0, (HEIGHT_RES/2)-50), 1)
+		auto1 = autoHippo((WIDTH_RES-100, (HEIGHT_RES/2)-50), 2)
+		auto2 = autoHippo(((WIDTH_RES/2)-50, 0), 3)
+		auto3 = autoHippo(((WIDTH_RES/2)-50, HEIGHT_RES-100), 4)
+		playerList = [player1, auto1, auto2, auto3]
+		autoHippoList = [auto1, auto2, auto3]
+		key_map = {
+			pygame.K_q: [player1.forward, player1.back]
+		}
+	else:	
+		if players >= 2:
+			score1 = createScore((20, 24), 1, apocalypse)
+			score2 = createScore(((WIDTH_RES-40, (HEIGHT_RES/2)+60)), 2, apocalypse)
+			scoreList = [score1, score2]
+			player1 = Hippo((0, (HEIGHT_RES/2)-50), 1)
+			player2 = Hippo((WIDTH_RES-100, (HEIGHT_RES/2)-50), 2)
+			playerList = [player1, player2]
+			key_map = {
+				pygame.K_q: [player1.forward, player1.back],
+				pygame.K_p: [player2.forward, player2.back]
+			}
+
+		if players >= 3:
+			score3 = createScore(((WIDTH_RES/2)+70, 20), 3, apocalypse)
+			scoreList.append(score3)
+			player3 = Hippo(((WIDTH_RES/2)-50, 0), 3)
+			playerList.append(player3)
+			key_map[pygame.K_m] = [player3.forward, player3.back]
+
+		if players == 4:
+			score4 = createScore((10, HEIGHT_RES-40), 4, apocalypse)
+			scoreList.append(score4)
+			player4 = Hippo(((WIDTH_RES/2)-50, HEIGHT_RES-100), 4)
+			playerList.append(player4)
+			key_map[pygame.K_z] = [player4.forward, player4.back]
 
 	sprites = pygame.sprite.RenderClear(scoreList + playerList)
 	ball = createBall(scoreList, playerList)
@@ -335,12 +370,19 @@ def main():
 	ballList = [ball]
 	ballSprite = pygame.sprite.RenderClear(ballList)
 
+	if singleplayer:
+		for hippo in autoHippoList:
+			hippo.setAutoHippo(ballList)
+		autoHippoSprites = pygame.sprite.RenderClear(autoHippoList)
+
 	# Run Game
 	stage = 91
 	while running_game:
 		clock.tick(60)
 		counter += 1
 		sprites.update()
+		if singleplayer:
+			autoHippoSprites.update()
 		ballSprite.update()
 
 		# Every 60 seconds add a ball whilst there are less balls than 10*players
