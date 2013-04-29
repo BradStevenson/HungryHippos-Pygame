@@ -56,81 +56,32 @@ class Hippo(Sprite):
 		self.rect = pygame.Rect(self.position, (100, 100))
 		pygame.draw.rect(self.image, pygame.Color("black"), self.rect)
 		self.state = False
-
-class damageBall(Sprite):
-	""" HANDLES BALL BEHAVIOURS """
-	def __init__(self, score, hippos):
-		Sprite.__init__(self)
-		self.image = pygame.image.load('Images/Bomb.png')
-
-		self.hippos = hippos
-		self.score = score
-		self.rect = self.image.get_rect()
-		self.rect.center = (WIDTH_RES/2, HEIGHT_RES/2)
-		angle = random.uniform(0, (math.pi/2)-0.18) # 0.18 ~= 10 degress
-		angle *= random.choice([-1,1])
-		side = random.choice([-1,1])
-		self.velocity = [side * 10 * math.cos(angle), 10 * math.sin(angle)]
-		self.start = (WIDTH_RES/2, HEIGHT_RES/2)
-
-
-	def update(self):
-		global totalScore
-		#  If ball is in play edit trajectory
-		if self.image.get_alpha() != 0:
-			self.velocity[0] += 0.01
-	 		self.velocity[1] -= 0.01
-
-		self.rect.move_ip(*self.velocity)
-
-		# Detect if eaten
-		for hippo in self.hippos:
-			if self.rect.colliderect(hippo.rect):
-				if hippo.state == True:
-					for score in self.score:
-						if score.player == hippo.player:
-							self.score[score.player-1].decrease()
-					self.rect.center = self.start
-					self.velocity = [0, 0]
-					self.image = pygame.Surface((0,0))
-					totalScore += 1
-				else:
-					self.velocity[0] *= -1
-					self.velocity[1] *= -1
-
-		# bounce ball of the top screen border
-		if self.rect.top < 0:
-			self.velocity[1] *= -1
-			self.rect.top = 1
-		# bounce ball off bottom screen border
-		elif self.rect.bottom > HEIGHT_RES:
-			self.velocity[1] *= -1
-			self.rect.bottom = HEIGHT_RES-1
-		# bounce ball off left screen border
-		elif self.rect.left < 0:
-			self.velocity[0] *= -1
-			self.rect.left = 1
-		# bounce ball off right screen border
-		elif self.rect.right > WIDTH_RES:
-			self.velocity[0] *= -1
-			self.rect.right = WIDTH_RES-1
 		
 class Ball(Sprite):
 	""" HANDLES BALL BEHAVIOURS """
 	def __init__(self, score, hippos):
 		Sprite.__init__(self)
-		self.image = pygame.image.load('Images/ball.png')
+		self.setImage()
 
 		self.hippos = hippos
 		self.score = score
 		self.rect = self.image.get_rect()
 		self.rect.center = (WIDTH_RES/2, HEIGHT_RES/2)
+
 		angle = random.uniform(0, (math.pi/2)-0.18) # 0.18 ~= 10 degress
 		angle *= random.choice([-1,1])
 		side = random.choice([-1,1])
-		self.velocity = [side * 15 * math.cos(angle), 15 * math.sin(angle)]
+		self.setVelocity(side, angle)
 		self.start = (WIDTH_RES/2, HEIGHT_RES/2)
 
+	def setImage(self):
+		self.image = pygame.image.load('Images/ball.png')
+
+	def setVelocity(self, side, angle):
+		self.velocity = [side * 15 * math.cos(angle), 15 * math.sin(angle)]
+
+	def adjustScore(self, player):
+		self.score[player-1].increase()
 
 	def update(self):
 		global totalScore
@@ -147,7 +98,7 @@ class Ball(Sprite):
 				if hippo.state == True:
 					for score in self.score:
 						if score.player == hippo.player:
-							self.score[score.player-1].increase()
+							self.adjustScore(score.player)
 					self.rect.center = self.start
 					self.velocity = [0, 0]
 					self.image = pygame.Surface((0,0))
@@ -173,34 +124,38 @@ class Ball(Sprite):
 			self.velocity[0] *= -1
 			self.rect.right = WIDTH_RES-1
 
+class damageBall(Ball):
+	""" HANDLES DAMAGE_BALL BEHAVIOURS """
+	def setImage(self):
+		self.image = pygame.image.load('Images/Bomb.png')
+
+	def setVelocity(self, side, angle):
+		self.velocity = [side * 10 * math.cos(angle), 10 * math.sin(angle)]
+
+	def adjustScore(self, player):
+		self.score[player-1].decrease()
+
 class Score(Sprite):
-	def __init__(self, color, position, player, text):
+	def __init__(self, position, player):
 		pygame.sprite.Sprite.__init__(self)
-
-		self.color = pygame.Color(color)
-		self.text = text
+		self.color = pygame.Color("white")
 		self.player = player
-		self.position = position
 		self.score = 0
-
-		if self.text:
-			self.font = pygame.font.Font("pixelated_bold.ttf", 36)
-			self.render_text()
-			self.rect = self.image.get_rect()
-
+		self.draw(position)
+			
+	def draw(self, position):
+		self.position = position
+		if self.player <= 2:
+			self.size = (20,300)
 		else:
-			if self.player <= 2:
-				self.size = (20,300)
-			else:
-				self.size = (300, 20)
-			self.image = pygame.Surface(self.size)
-			self.image.set_colorkey(pygame.Color("black"))
-			self.rect = pygame.Rect(position, self.size)
-			self.render_balls()
-
+			self.size = (300, 20)
+		self.image = pygame.Surface(self.size)
+		self.image.set_colorkey(pygame.Color("black"))
+		self.rect = pygame.Rect(self.position, self.size)
+		self.render()
 		self.rect.center = position
 
-	def render_balls(self):
+	def render(self):
 		self.image = pygame.Surface(self.size)
 		self.image.set_colorkey(pygame.Color("black"))
 		self.rect = pygame.Rect(self.position, self.size)
@@ -210,22 +165,31 @@ class Score(Sprite):
 			else:
 				pygame.draw.circle(self.image, self.color, ((i*20)+10, 10), 10)
 
-	def render_text(self):
-		self.image = self.font.render(str(self.score), True, self.color)
-
 	def increase(self):
 		self.score += 1
-		if self.text:
-			self.render_text()
-		else:
-			self.render_balls()
+		self.render()
 
 	def decrease(self):
 		self.score -= 2
-		if self.text:
-			self.render_text()
-		else:
-			self.render_balls()
+		self.render()
+
+class textScore(Score):
+	def draw(self, position):
+		if self.player == 1:
+			self.position = (20, (HEIGHT_RES/2)-70)
+		elif self.player == 2:
+			self.position = (WIDTH_RES-40, (HEIGHT_RES/2)+70)
+		elif self.player == 3:
+			self.position = ((WIDTH_RES/2)+70, 20)
+		elif self.player == 4:
+			self.position = ((WIDTH_RES/2)-70, HEIGHT_RES-40)
+		self.font = pygame.font.Font("pixelated_bold.ttf", 36)
+		self.render()
+		self.rect = self.image.get_rect()
+		self.rect.center = self.position
+
+	def render(self):
+		self.image = self.font.render(str(self.score), True, self.color)
 
 def setScreen(screen, background):
 	screen = pygame.display.set_mode((WIDTH_RES, HEIGHT_RES))
@@ -237,6 +201,12 @@ def createBall(scoreList, playerList):
 		return damageBall(scoreList, playerList)
 	else:
 		return Ball(scoreList, playerList)
+
+def createScore(position, player, apocalypse):
+	if apocalypse:
+		return textScore(position, player)
+	else:
+		return Score(position, player)
 
 def getWinner(scores):
 		highScore = 0
@@ -281,7 +251,7 @@ def main():
 				running_game = False
 				win_menu = False
 			elif event.type == pygame.KEYDOWN:
-			   	if event.key == pygame.K_UP:
+				if event.key == pygame.K_UP:
 			   		menu.draw(-1)
 			  	elif event.key == pygame.K_DOWN:
 				   	menu.draw(1)
@@ -292,7 +262,8 @@ def main():
 				   		multiplayer = True
 				   	elif menu.get_position() == 3:
 				   		singleplayer = True
- 				   	game_menu = False
+				   	if menu.get_position() != 0:
+ 				   		game_menu = False
 
 
 	# Player choice menu
@@ -332,8 +303,8 @@ def main():
 
 	# Initialize Sprites based on user chosen players.
 	if players >= 2:
-		score1 = Score("white", (20, 24), 1, apocalypse)
-		score2 = Score("white", ((WIDTH_RES-40, (HEIGHT_RES/2)+60)), 2, apocalypse)
+		score1 = createScore((20, 24), 1, apocalypse)
+		score2 = createScore(((WIDTH_RES-40, (HEIGHT_RES/2)+60)), 2, apocalypse)
 		scoreList = [score1, score2]
 		player1 = Hippo((0, (HEIGHT_RES/2)-50), 1)
 		player2 = Hippo((WIDTH_RES-100, (HEIGHT_RES/2)-50), 2)
@@ -344,14 +315,14 @@ def main():
 		}
 
 	if players >= 3:
-		score3 = Score("white", ((WIDTH_RES/2)+70, 20), 3, apocalypse)
+		score3 = createScore(((WIDTH_RES/2)+70, 20), 3, apocalypse)
 		scoreList.append(score3)
 		player3 = Hippo(((WIDTH_RES/2)-50, 0), 3)
 		playerList.append(player3)
 		key_map[pygame.K_m] = [player3.forward, player3.back]
 
 	if players == 4:
-		score4 = Score("white", (10, HEIGHT_RES-40), 4, apocalypse)
+		score4 = createScore((10, HEIGHT_RES-40), 4, apocalypse)
 		scoreList.append(score4)
 		player4 = Hippo(((WIDTH_RES/2)-50, HEIGHT_RES-100), 4)
 		playerList.append(player4)
