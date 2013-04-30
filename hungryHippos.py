@@ -297,7 +297,10 @@ def main():
 	setScreen(screen, background)
 
 	menu = Menu()
-	menu.init(['  2 player ', '  3 player ', '  4 player ', '  back '], screen, False)
+	if apocalypse:
+		menu.init(['singleplayer',  '  2 player ', '  3 player ', '  4 player ', '  back '], screen, False)
+	else:
+		menu.init(['  2 player ', '  3 player ', '  4 player ', '  back '], screen, False)
 	menu.draw()
 
 	while player_menu:
@@ -315,8 +318,11 @@ def main():
 			  	elif event.key == pygame.K_DOWN:
 				   	menu.draw(1)
 			  	elif event.key == pygame.K_RETURN:
-				   	if menu.get_position() == 0:
+				   	if menu.get_position() == 0 and not apocalypse:
 				   		players = 2
+				   	elif menu.get_position() == 0 and apocalypse:
+				   		singleplayer = True
+				   		players = 4
 				   	elif menu.get_position() == 1:
 				   		players = 3
 				   	elif menu.get_position() == 2:
