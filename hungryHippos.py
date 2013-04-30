@@ -245,7 +245,10 @@ def main():
 	players = 0
 	counter = 0
 	clock = pygame.time.Clock()
+	icon = pygame.transform.scale(pygame.image.load('Images/Hippo1.png'), (32, 32))
+	pygame.display.set_icon(icon)
 	screen = pygame.display.set_mode((WIDTH_RES, HEIGHT_RES))
+	pygame.display.set_caption('Hungry Hippos')
 	background = pygame.image.load('Images/background.png')
 	game_menu = True
 	player_menu = True
