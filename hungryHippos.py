@@ -104,9 +104,9 @@ class Ball(Sprite):
 	def update(self):
 		global totalScore
 		#  If ball is in play edit trajectory
-		if self.image.get_alpha() != 0:
-			self.velocity[0] += 0.01
-	 		self.velocity[1] -= 0.01
+		if self.image.get_width() != 0:
+			self.velocity[0] += 0.02
+	 		self.velocity[1] -= 0.0
 
 		self.rect.move_ip(*self.velocity)
 
@@ -164,24 +164,25 @@ class Score(Sprite):
 	def draw(self, position):
 		self.position = position
 		if self.player <= 2:
-			self.size = (20,300)
+			self.image = pygame.image.load('Images/ballTray.png')
 		else:
-			self.size = (300, 20)
-		self.image = pygame.Surface(self.size)
-		self.image.set_colorkey(pygame.Color("black"))
-		self.rect = pygame.Rect(self.position, self.size)
+			self.image = pygame.image.load('Images/ballTray90.png')
+		self.rect = self.image.get_rect()
 		self.render()
-		self.rect.center = position
+		self.rect.topleft = position
 
 	def render(self):
-		self.image = pygame.Surface(self.size)
-		self.image.set_colorkey(pygame.Color("black"))
-		self.rect = pygame.Rect(self.position, self.size)
+		if self.player <= 2:
+			self.image = pygame.image.load('Images/ballTray.png')
+		else:
+			self.image = pygame.image.load('Images/ballTray90.png')
+		self.rect = self.image.get_rect()
+		self.rect.topleft = self.position
 		for i in range (0, self.score):
 			if self.player <= 2:
-				pygame.draw.circle(self.image, self.color, (10, (i*20)+10), 10)
+				pygame.draw.circle(self.image, self.color, (13, (i*20)+13), 10)
 			else:
-				pygame.draw.circle(self.image, self.color, ((i*20)+10, 10), 10)
+				pygame.draw.circle(self.image, self.color, ((i*20)+13, 13), 10)
 
 	def increase(self):
 		self.score += 1
@@ -238,6 +239,7 @@ def getWinner(scores):
 def main():
 
 	global totalScore
+	totalScore = 0
 	players = 0
 	counter = 0
 	clock = pygame.time.Clock()
