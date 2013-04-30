@@ -173,16 +173,18 @@ class Score(Sprite):
 
 	def render(self):
 		if self.player <= 2:
-			self.image = pygame.image.load('Images/ballTray.png')
+			self.image = self.image
 		else:
-			self.image = pygame.image.load('Images/ballTray90.png')
+			self.image = self.image
 		self.rect = self.image.get_rect()
 		self.rect.topleft = self.position
 		for i in range (0, self.score):
 			if self.player <= 2:
 				pygame.draw.circle(self.image, self.color, (13, (i*20)+13), 10)
+				pygame.draw.circle(self.image, pygame.Color("black"), (13, (i*20)+13), 10, 1)
 			else:
 				pygame.draw.circle(self.image, self.color, ((i*20)+13, 13), 10)
+				pygame.draw.circle(self.image, pygame.Color("black"), (13, (i*20)+13), 10, 1)
 
 	def increase(self):
 		self.score += 1
