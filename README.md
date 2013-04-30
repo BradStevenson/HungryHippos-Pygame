@@ -15,6 +15,6 @@ Eat as many balls as you can whilst avoiding the bombs!
 
 Eating balls adds 1 to your score, eating bombs will deduct two points from your score.
 
-[![Alt text](normal_mode.png "Normal mode")]
+![Alt text](normal_mode.png "Normal mode")
 
-[![Alt text](infinite_mode.png "Inifinte mode")]
+![Alt text](infinite_mode.png "Inifinte mode")
